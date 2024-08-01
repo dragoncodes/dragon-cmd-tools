@@ -1,8 +1,7 @@
-
+use rayon::prelude::*;
+use std::env;
 use std::fs::{self, ReadDir};
 use std::path::PathBuf;
-use std::env;
-use rayon::prelude::*;
 
 fn main() {
     let mut args = env::args().skip(1);
@@ -13,22 +12,21 @@ fn main() {
         panic!("No arguments supplied");
     }
 
-    let file_name = if arg2.is_none() {
-        arg1.clone().unwrap()
+    let (dir, file_name) = if let Some(arg2) = arg2 {
+        (
+            (PathBuf::from(arg1.expect("Please provide a file name to search for"))),
+            arg2,
+        )
+    } else if let Some(arg1) = arg1 {
+        (PathBuf::from("./"), arg1)
     } else {
-        arg2.clone().unwrap()
-    }
-    .to_lowercase();
-
-    let dir = if let Some(arg2) = arg2 {
-        PathBuf::from(arg1.unwrap())
-    } else {
-        PathBuf::from("./")
+        panic!("No arguments supplied")
     };
 
     let current_path = env::current_dir().expect("Failed to get current directory");
 
-    let target_dir = current_path.join(dir);
+    let target_dir = fs::canonicalize(current_path.join(&dir))
+        .expect(&format!("Could not joint paths {:?} and {:?}", &current_path, &dir).to_owned());
 
     let read_dir_result = fs::read_dir(&target_dir).expect("Unable to read directory");
 
@@ -53,4 +51,3 @@ fn search_for_file_in_dir(dir: ReadDir, file_to_search: &str) {
         }
     });
 }
-
