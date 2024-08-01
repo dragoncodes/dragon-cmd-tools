@@ -18,10 +18,8 @@ fn main() {
         if output_str.trim().is_empty() {
             println!("No process is using port {}", port);
         } else {
-            let processes_infos = output_str.lines().skip(1);
-
-            for processes_info in processes_infos {
-                if let Some(pid) = processes_info.split_whitespace().collect::<Vec<_>>().get(1) {
+            for processes_info in output_str.lines().skip(1) {
+                if let Some(pid) = processes_info.split_whitespace().nth(1) {
                     let status = Command::new("kill")
                         .arg("-9")
                         .arg(pid)
